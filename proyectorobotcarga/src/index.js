@@ -8,16 +8,22 @@ function Opciones(props) {
   function handleSubmit(event) {
     event.preventDefault();
     const file = event.target.files[0];
-    props.handleMapa(file.name);
-    console.log("Sf");
+    props.setErrorMsg();
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        let content = e.target.result;
+        props.handleMapa(content);
+      }
+    }
   }
 
   return (
     <div>
-      <form onSubmit={handleSubmit}>
+      <div>
         <div class="fileUpload btn btn-primary">
           <span>Cargar Mapa</span>
-          <input type="file" class="upload" id='file' onChange={(e) => handleSubmit}/>
+          <input type="file" class="upload" id='file' onChange={(e) => handleSubmit(e)}/>
         </div>
         {(props.mapa != "") &&
           <div class="fileUpload btn btn-primary">
@@ -25,7 +31,7 @@ function Opciones(props) {
             <input type="file" class="upload" />
           </div>
         }
-      </form>
+      </div>
     </div>
   )
 }
@@ -43,7 +49,7 @@ function App() {
 
   return(
     <div>
-      <Opciones mapa={mapa} handleMapa={handleMapa}/>
+      <Opciones mapa={mapa} handleMapa={handleMapa} setErrorMsg={setErrorMsg}/>
       <label>
         {mapa}
       </label>
