@@ -8,13 +8,23 @@ function Opciones(props) {
   function handleSubmit(event) {
     event.preventDefault();
     const file = event.target.files[0];
-    props.setErrorMsg();
     if (file) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        let content = e.target.result;
-        props.handleMapa(content);
+      if (file.name.split('.').pop() != 'txt') {
+        props.setErrorMsg("Solo se aceptan archivos .txt");
+        return;
       }
+      let reader = new FileReader();
+      reader.onloadend = function(e) {
+        let content = e.target.result;
+        if (event.target.id == 'fileMapa') {
+          props.handleMapa(content);
+        } else if (event.target.id == 'fileCodigo') {
+          props.handleCodigo(content);
+        }
+      }
+      reader.readAsText(file);//necesario aunque no parezca
+    } else {
+      props.setErrorMsg("No se ha podido abrir el archivo");
     }
   }
 
@@ -23,12 +33,12 @@ function Opciones(props) {
       <div>
         <div class="fileUpload btn btn-primary">
           <span>Cargar Mapa</span>
-          <input type="file" class="upload" id='file' onChange={(e) => handleSubmit(e)}/>
+          <input type="file" class="upload" id='fileMapa' onChange={(e) => handleSubmit(e)}/>
         </div>
         {(props.mapa != "") &&
           <div class="fileUpload btn btn-primary">
             <span>Cargar Codigo</span>
-            <input type="file" class="upload" />
+            <input type="file" class="upload" id='fileCodigo' onChange={(e) => handleSubmit(e)}/>
           </div>
         }
       </div>
@@ -42,14 +52,18 @@ function App() {
   const [codigo, setCodigo] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  function handleMapa(val) {
-    setMapa(val);
-    console.log("xczdc", mapa);
-  }
-
-  return(
+  return (
     <div>
-      <Opciones mapa={mapa} handleMapa={handleMapa} setErrorMsg={setErrorMsg}/>
+      {errorMsg &&
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+          <strong>{errorMsg}</strong>
+          <button type="button" class="btn-close" data-dismiss="alert">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      }
+      <Opciones mapa={mapa} handleMapa={setMapa}
+        setErrorMsg={setErrorMsg} handleCodigo={setCodigo} />
       <label>
         {mapa}
       </label>
