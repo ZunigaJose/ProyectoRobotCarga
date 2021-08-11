@@ -1,8 +1,55 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import App from './App';
 import reportWebVitals from './reportWebVitals';
+
+function Opciones(props) {
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    const file = event.target.files[0];
+    props.handleMapa(file.name);
+    console.log("Sf");
+  }
+
+  return (
+    <div>
+      <form onSubmit={handleSubmit}>
+        <div class="fileUpload btn btn-primary">
+          <span>Cargar Mapa</span>
+          <input type="file" class="upload" id='file' onChange={(e) => handleSubmit}/>
+        </div>
+        {(props.mapa != "") &&
+          <div class="fileUpload btn btn-primary">
+            <span>Cargar Codigo</span>
+            <input type="file" class="upload" />
+          </div>
+        }
+      </form>
+    </div>
+  )
+}
+
+
+function App() {
+  const [mapa, setMapa] = useState("");
+  const [codigo, setCodigo] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  function handleMapa(val) {
+    setMapa(val);
+    console.log("xczdc", mapa);
+  }
+
+  return(
+    <div>
+      <Opciones mapa={mapa} handleMapa={handleMapa}/>
+      <label>
+        {mapa}
+      </label>
+    </div>
+  )
+}
 
 ReactDOM.render(
   <React.StrictMode>
