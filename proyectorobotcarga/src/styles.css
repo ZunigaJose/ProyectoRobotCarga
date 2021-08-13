@@ -1,0 +1,70 @@
+body{
+    background: #4b54a5;
+    background: linear-gradient(to right, #161941, #9bcaff);
+    color: #eee;
+}
+
+.cuadro{
+    display: inline-block;
+    width: 30px;
+    margin-left: 10px;
+    height: 30px;
+    background-color: rgb(84, 94, 105);
+    /* border: none; */
+}
+
+.objetivo{
+    display: inline-block;
+    width: 30px;
+    margin-left: 10px;
+    height: 30px;
+    background-color: rgb(221, 255, 31);
+}
+
+.destino{
+    display: inline-block;
+    width: 30px;
+    margin-left: 10px;
+    height: 30px;
+    background-color: rgb(83, 255, 49);
+}
+
+.robotDown {
+    display: inline-block;
+    width: 30px;
+    margin-left: 10px;
+    height: 30px;
+    background-color: rgb(47, 1, 107);
+}
+
+.robotLeft {
+    display: inline-block;
+    width: 30px;
+    margin-left: 10px;
+    height: 30px;
+    background-color: rgb(47, 1, 107);
+}
+
+.robotRight {
+    display: inline-block;
+    width: 30px;
+    margin-left: 10px;
+    height: 30px;
+    background-color: rgb(47, 1, 107);
+}
+
+.robotUp {
+    display: inline-block;
+    width: 30px;
+    margin-left: 10px;
+    height: 30px;
+    background-color: rgb(47, 1, 107);
+}
+
+.obstaculo {
+    display: inline-block;
+    width: 30px;
+    margin-left: 10px;
+    height: 30px;
+    background-color: rgb(0, 0, 0);
+}   
