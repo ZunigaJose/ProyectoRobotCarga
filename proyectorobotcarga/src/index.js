@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 import './styles.css';
 import './index.css';
@@ -42,6 +42,10 @@ function Opciones(props) {
             <span>Cargar Codigo</span>
             <input type="file" class="upload" id='fileCodigo' onChange={(e) => handleSubmit(e)}/>
           </div>
+        }
+        {(props.codigo != "") &&
+          <button type="button" class="btn btn-success" onClick={props.setIniciar(true)}
+          >Iniciar</button>
         }
       </div>
     </div>
@@ -141,25 +145,23 @@ function App() {
   const [objetivoMontado, setObjetivoMontado] = useState(false);
   const [sizeX, setSizeX]  = useState(0);
   const [sizeY, setSizeY]  = useState(0);
+  const [iniciar, setIniciar] = useState(false);
 
-  function handleCodigo(codigo) {
-    setCodigo(codigo);
+  useEffect(() => {//codigo
     codigoMatriz(codigo);
-  }
+  }, [codigo]);
 
-  function handleMapa(mapa) {
-    setMapa(mapa);
-    setArregloMapa([]);//evita que el programa explote, No borrar
+  useEffect(() => {//mapa
+    setArregloMapa([]);
     let arr = mapa.split(/\r?\n/);
     let dimensions = arr[0].split(',');
     if (dimensions.length != 2 && mapa) {
       setErrorMsg("Ocurrio un error leyendo el archivo, Puede que no este en el formato aceptado.");
       return;
     }
-    let x, y;
     try {
-      x = dimensions[0];
-      y = dimensions[1];
+      const x = dimensions[0];
+      const y = dimensions[1];
       setSizeX(x);
       setSizeY(y);
       setArregloMapa(arr.slice(1, arr.length));
@@ -183,7 +185,8 @@ function App() {
         }        
       }
     }
-  }
+  }, [mapa]);
+
 
   function handleArregloMapaUpdate(lineaOld, indexOld, charReplace, lineaNew, indexNew, charNew) {
     function setCharAt(str,index,chr) {
@@ -315,7 +318,7 @@ function App() {
     //erroresFrame.innerText = "";
     let errores = "";
     var jumps = [];
-    for( var i = 0; i < 16; i++ ){
+    for( var i = 0; i < 16; i++ ) {
       var arregloTemp = []
       var registro = i + "R";
       arregloTemp.push(registro);
@@ -367,18 +370,40 @@ function App() {
       const idR1 = parametro.split("R")[0];
       return matrizRegistro[idR1][1];
     }else
-      return parametro[1];
+      return parametro;
   }
 
   var fila = 0, columna = 0, comandoActual = "";
   function ejecutarPrograma(){
-    while(true){
-      comandoActual = matriz[fila][columna];
-      ejecutarComando(comandoActual);
-      if( fila == matriz.length - 1 && columna == matriz[fila].length)
-        break;
+    var Registros = "";
+    try{
+      while(true){
+        comandoActual = matriz[fila][columna];
+        console.log(comandoActual);
+        sleep(500);
+        ejecutarComando(comandoActual);
+        Registros = "";
+        for(var i = 0; i < 16; i++){
+          Registros += "["+matrizRegistro[i][1]+"]";
+        }
+        console.log(Registros);
+        if( fila == matriz.length - 1 && columna == matriz[fila].length)
+          break;
+      }
+    }catch(error){
+      errores = ""
+      setErrorCodigo(errores);
     }
   }
+
+  function sleep(milliseconds) {
+    var start = new Date().getTime();
+    for (var i = 0; i < 1e7; i++) {
+     if ((new Date().getTime() - start) > milliseconds) {
+      break;
+     }
+    }
+   }
 
   function enfrente(parametro){
     let siguienteCasilla = -1;
@@ -415,6 +440,7 @@ function App() {
 
   //Asignar que registro guarda que cosa
   function ejecutarComando(comando){
+    var terminoJump = false;
     const palabras = comando.split(" ");
     switch(palabras[0]){
       case "avz":
@@ -504,6 +530,7 @@ function App() {
             }
           }else{
             if(objetivoMontado == 0 && enfrente("rgb(221, 255, 31)")){
+              setObjetivoMontado(1);
               //CAMBIAR IMAGEN
               //Quitar la caja  del frente/
             }
@@ -579,8 +606,9 @@ function App() {
       
       case "mov":
         const idR1 = palabras[1].split("R")[0];
-        const idR2 = palabras[2].split("R")[0];
-        matrizRegistro[idR1][1] = matrizRegistro[idR2][1];
+        var num;
+        num = convertirNumero(palabras[2]);
+        matrizRegistro[idR1][1] = num;
         break;
       
       case "sum":
@@ -588,7 +616,7 @@ function App() {
         num1 = convertirNumero(palabras[1]);
         num2 = convertirNumero(palabras[2]);
         const idRSum = palabras[3].split("R")[0];
-        matrizRegistro[idRSum][1] = (num1 + num2);
+        matrizRegistro[idRSum][1] = (parseInt(num1) + parseInt(num2));
         break;
       
       case "rst":
@@ -596,7 +624,7 @@ function App() {
         num1 = convertirNumero(palabras[1]);
         num2 = convertirNumero(palabras[2]);
         const idRst = palabras[3].split("R")[0];
-        matrizRegistro[idRst][1] = (num1 - num2);
+        matrizRegistro[idRst][1] = (parseInt(num1) - parseInt(num2));
         break;
 
       case "mul":
@@ -604,7 +632,7 @@ function App() {
         num1 = convertirNumero(palabras[1]);
         num2 = convertirNumero(palabras[2]);
         const idRMul = palabras[3].split("R")[0];
-        matrizRegistro[idRMul][1] = (num1 * num2);
+        matrizRegistro[idRMul][1] = (parseInt(num1) * parseInt(num2));
         break;
 
       case "div": //R13
@@ -612,8 +640,8 @@ function App() {
         num1 = convertirNumero(palabras[1]);
         num2 = convertirNumero(palabras[2]);
         const idRDiv = palabras[3].split("R")[0];
-        matrizRegistro[idRDiv][1] = (num1 / num2);
-        matrizRegistro[13][1] = (num1 % num2);
+        matrizRegistro[idRDiv][1] = (parseInt(num1) / parseInt(num2));
+        matrizRegistro[13][1] = (parseInt(num1) % parseInt(num2));
         break;
       
       case "cmp": //Registro R12
@@ -659,32 +687,42 @@ function App() {
       case "jmle": //Registro R12
         if(matrizRegistro[12][1] ==  -2)
           jumpEtiqueta(palabras[1]);
+        else
+          terminoJump = true;
         break;
 
       case "jml": //Registro R12
         if(matrizRegistro[12][1] == -1)
           jumpEtiqueta(palabras[1]);
+        else
+          terminoJump = true;
         break;
 
       case "jme": //Registro R12
         if(matrizRegistro[12][1] == 0)
           jumpEtiqueta(palabras[1]);
+        else
+          terminoJump = true;
         break;
 
       case "jmh": //Registro R12
         if(matrizRegistro[12][1] == 1)
           jumpEtiqueta(palabras[1]);
+        else
+          terminoJump = true;
         break;
 
       case "jmhe": //Registro R12
         if(matrizRegistro[12][1] ==  2)
           jumpEtiqueta(palabras[1]);
+        else
+          terminoJump = true;
         break;
       
       case "log":
         break;
     }
-    if(!esJump(comando)){
+    if(!esJump(comando) || terminoJump){
         if(columna == matriz[fila].length - 1){
           fila++;
           columna = 0;
@@ -712,8 +750,8 @@ function App() {
           </button>
         </div>
       }
-      <Opciones mapa={mapa} handleMapa={handleMapa} setArregloMapa={setArregloMapa}
-        setErrorMsg={setErrorMsg} handleCodigo={handleCodigo}
+      <Opciones mapa={mapa} codigo={codigo} handleMapa={setMapa} setArregloMapa={setArregloMapa}
+        setErrorMsg={setErrorMsg} handleCodigo={setCodigo}
         setErroresCodigo={setErrorCodigo} />
        <div className = "bg-dark container my-2 p-5 text-center">
         {(arregloMapa.length != 0) && <Mapa setErrorMsg={setErrorMsg} setDir={setDir} arr={arregloMapa}
