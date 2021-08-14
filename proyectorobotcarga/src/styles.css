@@ -19,6 +19,8 @@ body{
     margin-left: 10px;
     height: 30px;
     background-color: rgb(221, 255, 31);
+    background-image: url('./images/elementos/objetivo.png');
+    background-size: 30px 30px;
 }
 
 .destino{
@@ -27,6 +29,8 @@ body{
     margin-left: 10px;
     height: 30px;
     background-color: rgb(83, 255, 49);
+    background-image: url('./images/elementos/destino.png');
+    background-size: 30px 30px;
 }
 
 .robotDown {
@@ -35,6 +39,8 @@ body{
     margin-left: 10px;
     height: 30px;
     background-color: rgb(47, 1, 107);
+    background-image: url('./images/robot/sinCarga/abajo.png');
+    background-size: 30px 30px;
 }
 
 .robotLeft {
@@ -43,6 +49,8 @@ body{
     margin-left: 10px;
     height: 30px;
     background-color: rgb(47, 1, 107);
+    background-image: url('./images/robot/sinCarga/izquierda.png');
+    background-size: 30px 30px;
 }
 
 .robotRight {
@@ -51,6 +59,8 @@ body{
     margin-left: 10px;
     height: 30px;
     background-color: rgb(47, 1, 107);
+    background-image: url('./images/robot/sinCarga/derecha.png');
+    background-size: 30px 30px;
 }
 
 .robotUp {
@@ -59,6 +69,48 @@ body{
     margin-left: 10px;
     height: 30px;
     background-color: rgb(47, 1, 107);
+    background-image: url('./images/robot/sinCarga/arriba.png');
+    background-size: 30px 30px;
+}
+
+.robotDownCon {
+    display: inline-block;
+    width: 30px;
+    margin-left: 10px;
+    height: 30px;
+    background-color: rgb(47, 1, 107);
+    background-image: url('./images/robot/conCarga/abajo.png');
+    background-size: 30px 30px;
+}
+
+.robotLeftCon {
+    display: inline-block;
+    width: 30px;
+    margin-left: 10px;
+    height: 30px;
+    background-color: rgb(47, 1, 107);
+    background-image: url('./images/robot/conCarga/izquierda.png');
+    background-size: 30px 30px;
+}
+
+.robotRightCon {
+    display: inline-block;
+    width: 30px;
+    margin-left: 10px;
+    height: 30px;
+    background-color: rgb(47, 1, 107);
+    background-image: url('./images/robot/conCarga/derecha.png');
+    background-size: 30px 30px;
+}
+
+.robotUpCon {
+    display: inline-block;
+    width: 30px;
+    margin-left: 10px;
+    height: 30px;
+    background-color: rgb(47, 1, 107);
+    background-image: url('./images/robot/conCarga/arriba.png');
+    background-size: 30px 30px;
 }
 
 .obstaculo {
@@ -67,4 +119,6 @@ body{
     margin-left: 10px;
     height: 30px;
     background-color: rgb(0, 0, 0);
+    background-image: url('./images/elementos/obstaculo.jpg');
+    background-size: 30px 30px;
 }   
