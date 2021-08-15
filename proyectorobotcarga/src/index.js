@@ -289,15 +289,35 @@ function App() {
           case "rtr":
             const idActual = posX * sizeY + posY;
             const robot = document.getElementById(idActual);
+            let direccion = 0;
             document.getElementById(idActual + 1);
-            if (dir == 0 && palabras[1] == -90) {
+            if (dir == 0 && palabras[1] == '-90') {
+              direccion = 270;
               setDir(270);
-            } else if (dir == 270 && palabras[1] == 90) {
+            } else if (dir == 270 && palabras[1] == '+90') {
+              direccion = 0;
               setDir(0);
             } else {
-              let direccion = dir + palabras[1];
+              direccion = dir + parseInt(palabras[1]);
+              console.log(direccion);
               setDir(direccion);
             }
+            let chr = '';
+            switch (direccion) {
+              case 0:
+                chr = '>';
+                break;
+              case 90:
+                chr = '^';
+                break;
+              case 180:
+                chr = '<';
+                break;
+              case 270:
+                chr = 'v';
+                break;
+            }
+            handleArregloMapaUpdate(posX,posY,chr);
             // let path = "./images/robot/";
             // if(objetivoMontado == 1)
             //   path += "conCarga/";
@@ -567,7 +587,8 @@ function App() {
   }, 1000);
   
 
-  function handleArregloMapaUpdate(lineaOld, indexOld, charReplace, lineaNew, indexNew, charNew, rmoves = 0) {
+  function handleArregloMapaUpdate(lineaOld, indexOld, charReplace, lineaNew = lineaOld,
+     indexNew = indexOld, charNew = charReplace, rmoves = 0) {
     function setCharAt(str,index,chr) {
       let string = "";
       for (let i = 0; i < str.length; i++) {
@@ -654,9 +675,9 @@ function App() {
               return true;
           error = "Parametro de comando 'avz' invalido";
         }else if( palabras[0] == "rtr"){
-          if(palabras[1] == 90 || palabras[1] == -90)
+          if(palabras[1] == '+90' || palabras[1] == '-90')
             return true;
-          error = "El parametro del comando 'rtr' solo puede ser 90 o -90";
+          error = "El parametro del comando 'rtr' solo puede ser +90 o -90";
         }else if( palabras[0] == "crg" ){
           if(palabras[1] == 1 || palabras[1] == 0)
             return true;
