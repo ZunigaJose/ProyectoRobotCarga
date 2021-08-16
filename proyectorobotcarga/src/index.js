@@ -33,7 +33,7 @@ function Opciones(props) {
 
   return (
     <div>
-      <div>
+      <div className= "form-inline well">
         <div class="fileUpload btn btn-primary">
           <span>Cargar Mapa</span>
           <input type="file" class="upload" id='fileMapa' onChange={(e) => handleSubmit(e)}/>
@@ -45,8 +45,18 @@ function Opciones(props) {
           </div>
         }
         {(props.codigo != "") &&
-          <button type="button" class="btn btn-success" onClick={props.setIniciar(true)}
-          >Iniciar</button>
+          <button type="button" class={props.iniciar ? "btn btn-danger" :"btn btn-success"} 
+          onClick={() => {props.setIniciar(!props.iniciar)}}
+          >{props.iniciar ? "Detener" : "Iniciar"}</button>
+        }
+        {(props.iniciar) &&
+          <select className="form-select input-sm" value={props.delay} style={{width: 'auto'}}
+           onchange={(e) => {props.setDelay(e.target.value); console.log('ww', e.target.value)}}>
+          <option value="1">1 Segundo</option>
+          <option value="2">2 Segundos</option>
+          <option value="3">3 Segundos</option>
+          <option value="5">5 Segundos</option>
+        </select>
         }
       </div>
     </div>
@@ -100,9 +110,9 @@ function Mapa(props) {
   }
 
   return (
-    <div className="tablero" id="tablero">
+    <div className="tablero p-3 rounded" id="tablero">
       {arregloX.map((vacio, x) => (
-        <div className="bg-dark" key={vacio}>
+        <div key={vacio}>
           {arregloY.map((vacio, y) => (
             <div id={(x * arregloY.length) + y} className={style(x, y)} key={vacio}></div>
           ))}
@@ -130,6 +140,23 @@ function ErrorMsgCodigo(props) {
   }
 }
 
+function Registros(props) {
+  return (
+    <table class="table table-striped">
+      <tbody >
+        <th class="table_title ">Registros</th>
+        <th class="table_title">valor</th>
+        {props.registros.map((data, i) => (
+          <tr class="table_registro" key={i}>
+            <th class="table_registro">{data[0]}</th>
+            <td class="table_registro">{data[1]}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 function App() {
   //var stack = [];
   var error = "";
@@ -137,12 +164,14 @@ function App() {
   const [matriz, setMatriz] = useState([]);
   const [stack, setStack] = useState([]);
   const matrizRe = useRef([]);
+  const [matrizRegistros, setMatrizRegistros] = useState([]);
   let matrizRegistro = [];
   const fil = useRef(0);
   const col = useRef(0);
   const moves = useRef(0);
   const [errorCodigo, setErrorCodigo] = useState("");
   const [mapa, setMapa] = useState("");
+  const [delay, setDelay] = useState(1);
   const [arregloMapa, setArregloMapa] = useState("");
   const [codigo, setCodigo] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -156,16 +185,17 @@ function App() {
 
   useEffect(() => {//codigo
     codigoMatriz(codigo);
-    matrizRe.current = [];
     const matriztmp = [];
-    for( var i = 0; i < 16; i++ ) {
+    for (let i = 0; i < 16; i++) {
       var arregloTemp = []
       var registro = i + "R";
       arregloTemp.push(registro);
       arregloTemp.push(0);
       matriztmp.push(arregloTemp);
     }
-    matrizRe.current = matriztmp;
+    matrizRe.current = matriztmp
+    setMatrizRegistros(matriztmp);
+    console.log(matrizRe.current);
   }, [codigo]);
 
   function updateMatriz(arr) {
@@ -202,7 +232,7 @@ function App() {
   }, [arregloMapa]);
 
   useEffect(() => {
-    //console.log('mm', matriz);
+    console.log('matriz:', matriz);
   }, [matriz]);
 
   useEffect(() => {//mapa
@@ -226,17 +256,21 @@ function App() {
 
   useInterval(() => {
     if (moves.current > 0) {
-      let pos = 0;
-      moves.current = moves.current - 1;
-      //console.log('MOVING');
-      if (dir == 0) {
-        handleArregloMapaUpdate(posX, posY, '-', posX, posY + 1, '>', moves.current);
-      } else if (dir == 90) {
-        handleArregloMapaUpdate(posX, posY, '-', posX - 1, posY, '^', moves.current);
-      } else if (dir == 180) {
-        handleArregloMapaUpdate(posX, posY, '-', posX, posY - 1, '<', moves.current);
-      } else if (dir == 270 /*&& enfrente("rgb(84, 94, 105))*/) {
-        handleArregloMapaUpdate(posX, posY, '-', posX + 1, posY, 'v', moves.current);
+      if(enfrente("rgb(84, 94, 105)")){
+        let pos = 0;
+        moves.current = moves.current - 1;
+        console.log(moves.current);
+        if (dir == 0) {
+          handleArregloMapaUpdate(posX, posY, '-', posX, posY + 1, '>', moves.current);
+        } else if (dir == 90) {
+          handleArregloMapaUpdate(posX, posY, '-', posX - 1, posY, '^', moves.current);
+        } else if (dir == 180) {
+          handleArregloMapaUpdate(posX, posY, '-', posX, posY - 1, '<', moves.current);
+        } else if (dir == 270 /*&& enfrente("rgb(84, 94, 105))*/) {
+          handleArregloMapaUpdate(posX, posY, '-', posX + 1, posY, 'v', moves.current);
+        }
+      } else {
+        moves.current = 0;
       }
     } else {
       var comandoActual = "";
@@ -244,44 +278,47 @@ function App() {
       let z = 0;
       try {
         comandoActual = matriz[fil.current][col.current];
-        console.log(comandoActual);
+        console.log(comandoActual, 'fil: ', fil.current, 'col: ', col.current);
         ejecutarComando(comandoActual);
         Registros = "";
         for (var i = 0; i < 16; i++) {
           Registros += "[" + matrizRe.current[i][1] + "]";
         }
-        console.log(Registros);
         if (fil.current == matriz.length - 1 && col.current == matriz[fila].length)
           return;
       } catch (error) {
         let errores = "";
-        setErrorCodigo(errores);
+        setErrorMsg(errores);
       }
       function ejecutarComando(comando) {
         var terminoJump = false;
         const palabras = comando.split(" ");
         switch (palabras[0]) {
           case "avz":
-            let pos = 0;
-            const numero = convertirNumero(palabras[1]);
-            console.log('dir: ', dir);
-            //const robotAntes = document.getElementById(posX * sizeY + posY);
-            //Cambiar el estilo
-            if (dir == 0) {
-              handleArregloMapaUpdate(posX, posY, '-', posX, posY + 1, '>', numero);
-            } else if (dir == 90) {
-              handleArregloMapaUpdate(posX, posY, '-', posX - 1, posY, '^', numero);
-            } else if (dir == 180) {
-              handleArregloMapaUpdate(posX, posY, '-', posX, posY - 1, '<', numero);
-            } else if (dir == 270 /*&& enfrente("rgb(84, 94, 105))*/) {
-              handleArregloMapaUpdate(posX, posY, '-', posX + 1, posY, 'v', numero);
-            }
-            //const robotDespues = document.getElementById(posX * sizeY + posY);
-            //Cambiamos el estilo
-            // sleep(500);
-            if (numero > 1) {
-              moves.current = numero;
-            } else {
+            if(enfrente("rgb(84, 94, 105)")){
+              let pos = 0;
+              const numero = convertirNumero(palabras[1]);
+              console.log('dir: ', dir);
+              //const robotAntes = document.getElementById(posX * sizeY + posY);
+              //Cambiar el estilo
+              if (dir == 0) {
+                handleArregloMapaUpdate(posX, posY, '-', posX, posY + 1, '>', numero);
+              } else if (dir == 90) {
+                handleArregloMapaUpdate(posX, posY, '-', posX - 1, posY, '^', numero);
+              } else if (dir == 180) {
+                handleArregloMapaUpdate(posX, posY, '-', posX, posY - 1, '<', numero);
+              } else if (dir == 270 /*&& enfrente("rgb(84, 94, 105))*/) {
+                handleArregloMapaUpdate(posX, posY, '-', posX + 1, posY, 'v', numero);
+              }
+              //const robotDespues = document.getElementById(posX * sizeY + posY);
+              //Cambiamos el estilo
+              // sleep(500);
+              if (numero > 1) {
+                moves.current = numero - 1;
+              } else {
+                moves.current = 0;
+              }
+            }  else {
               moves.current = 0;
             }
             break;
@@ -364,6 +401,15 @@ function App() {
               }
             } else {
               if (objetivoMontado == 0 && enfrente("rgb(221, 255, 31)")) {
+                if (dir == 0) {
+                  //handleArregloMapaUpdate(posX, posY, '-', posX, posY + 1, '>', numero);
+                } else if (dir == 90) {
+                  //handleArregloMapaUpdate(posX, posY, '-', posX - 1, posY, '^', numero);
+                } else if (dir == 180) {
+                  //handleArregloMapaUpdate(posX, posY, '-', posX, posY - 1, '<', numero);
+                } else if (dir == 270 /*&& enfrente("rgb(84, 94, 105))*/) {
+                  //handleArregloMapaUpdate(posX, posY, '-', posX + 1, posY, 'v', numero);
+                }
                 setObjetivoMontado(1);
                 //CAMBIAR IMAGEN
                 //Quitar la caja  del frente/
@@ -477,7 +523,7 @@ function App() {
             num1 = convertirNumero(palabras[1]);
             num2 = convertirNumero(palabras[2]);
             const idRDiv = palabras[3].split("R")[0];
-            matrizRe.current[idRDiv][1] = (parseInt(num1) / parseInt(num2));
+            matrizRe.current[idRDiv][1] = parseInt(parseInt(num1) / parseInt(num2));
             matrizRe.current[13][1] = (parseInt(num1) % parseInt(num2));
             break;
 
@@ -560,14 +606,15 @@ function App() {
             break;
         }
         if (!esJump(comando) || terminoJump) {
-          if (columna == matriz[fila].length - 1) {
+          if (col.current == matriz[fil.current].length - 1) {
             fila++;
             fil.current = fil.current + 1;
             columna = 0;
             col.current = 0;
-          } else
+          } else {
             columna++;
-          col.current = col.current + 1;
+            col.current = col.current + 1;
+          }
         }
       }
 
@@ -583,8 +630,10 @@ function App() {
       }
       
     }
-    console.log(fil.current, arregloMapa);
-  }, 1000);
+    const currTmp = [...matrizRe.current]
+    setMatrizRegistros(currTmp);
+    //console.log(matriz);
+  }, iniciar ? delay * 1000 : null);
   
 
   function handleArregloMapaUpdate(lineaOld, indexOld, charReplace, lineaNew = lineaOld,
@@ -598,8 +647,6 @@ function App() {
           string += str.charAt(i);
         } 
       }
-      console.log('charRp', str.substring(0,index) + chr + str.substring(index+1));
-      console.log(string);
       return string;
   }
     const arr = [...arregloMapa];
@@ -740,7 +787,30 @@ function App() {
 
     for( var i = 0; i < lineas.length; i++ ) {
       lineas[i] = lineas[i].split("#")[0];
-      lineas[i] = lineas[i].replace("\t","");
+      lineas[i] = lineas[i].split("#")[0];
+      lineas[i] += " ";
+      var aux = [], acum = "";
+      for(var h = 0; h < lineas[i].length; h++){
+        if(lineas[i][h] != " " && lineas[i] != '\t'){
+          acum += lineas[i][h];
+        }
+        if( (lineas[i][h] == " " || lineas[i][h] == '\t') && acum != ""){
+          aux.push(acum);
+          acum = "";
+        }
+      }
+      do{
+        var h = aux.indexOf('\t');
+        if ( h !== -1 ) {
+          aux.splice( h, 1 );
+        }
+      }while(h !== -1);
+      lineas[i] = "";
+      for(var h = 0; h < aux.length; h++){
+        lineas[i] += aux[h];
+        if(h < aux.length-1)
+          lineas[i] += " ";
+      }
       if( lineas[i].split(" ").length == 1 && lineas[i].charAt(lineas[i].length-1) == ':' ){
         //matriz.push(arreglo);
         matrizTeemporal.push(arreglo);
@@ -775,6 +845,7 @@ function App() {
         errores += "Error en la linea: " + jumps[i].split(" ")[1].split("%")[1] + "\n" + jmp + "\n" + error + "\n\n";
       }
         if (errores != "") {
+          setErrorMsg("Error en su archivo de codigo, revisé abajo para más información.")
           setErrorCodigo(errores); 
         } else {
           setMatriz(matrizTeemporal);
@@ -842,7 +913,7 @@ function App() {
     if( siguienteCasilla == -1){
       return false;
     }else
-      if(siguienteCasilla.style.backgroundColor == parametro)
+      if(window.getComputedStyle(siguienteCasilla).backgroundColor  == parametro)
         return true;
     //Si hay obstaculo
     //Si esta en el borde
@@ -862,22 +933,32 @@ function App() {
     <div>
       {errorMsg &&
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-
-
           <strong>{errorMsg}</strong>
           <button type="button" class="btn-close" data-dismiss="alert" onClick={(e) => (setErrorMsg(""))}>
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
       }
-      <Opciones mapa={mapa} codigo={codigo} handleMapa={setMapa} setArregloMapa={setArregloMapa}
-        setErrorMsg={setErrorMsg} handleCodigo={setCodigo} setIniciar={setIniciar}
-        setErroresCodigo={setErrorCodigo} />
-       <div className = "bg-dark container my-2 p-5 text-center">
-        {(arregloMapa.length != 0) && <Mapa setErrorMsg={setErrorMsg} setDir={setDir} arr={arregloMapa}
-        x={sizeX} y={sizeY} objetivoMontado={objetivoMontado}/>}{/*Talvez sea conveniente quitar los setx y sety en un futuro*/}
-      </div> 
-      <ErrorMsgCodigo errores={errorCodigo}/>
+      <nav className="navbar-light bg-light">
+        <Opciones mapa={mapa} codigo={codigo} handleMapa={setMapa} setArregloMapa={setArregloMapa}
+        setErrorMsg={setErrorMsg} handleCodigo={setCodigo} setIniciar={setIniciar} iniciar={iniciar}
+        setErroresCodigo={setErrorCodigo} setDelay={setDelay} delay={delay}/>
+      </nav>
+      <div className="fondo p-5 text-center">
+        {(arregloMapa.length != 0) &&
+            <div className="row">
+              <div className="col-md-10">
+                <Mapa setErrorMsg={setErrorMsg} setDir={setDir} arr={arregloMapa}
+                  x={sizeX} y={sizeY} objetivoMontado={objetivoMontado} />
+              </div>
+              
+              {<div className="col-md-2">
+                <Registros registros={matrizRegistros}/>
+        </div>}
+            </div>
+          }
+      </div>
+      <ErrorMsgCodigo errores={errorCodigo} />
     </div>
   )
 }

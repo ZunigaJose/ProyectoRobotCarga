@@ -10,7 +10,12 @@ body{
     margin-left: 10px;
     height: 30px;
     background-color: rgb(84, 94, 105);
+    background-image: url("./images/elementos/piso.jpg");
     /* border: none; */
+}
+
+.fondo{
+    background: linear-gradient(to left, #632675, #9bcaff);
 }
 
 .objetivo{
@@ -122,3 +127,25 @@ body{
     background-image: url('./images/elementos/obstaculo.jpg');
     background-size: 30px 30px;
 }   
+
+.table_title{
+    background-color: #232863;
+    color: #eee;
+    border: 1px solid rgb(110, 0, 153);
+}
+
+.table_registro:first-child{
+    background-color: #4c54aa;
+    color: #eee;
+    border: 1px solid rgb(110, 0, 153);
+}
+
+.table_registro:nth-child(2){
+    background-color: #d1dcee;
+    color: rgb(0, 0, 0);
+    border: 1px solid rgb(110, 0, 153);
+}
+
+.tablero{
+    background: linear-gradient(to right, #a0a5e7, #ce8cec);
+}
