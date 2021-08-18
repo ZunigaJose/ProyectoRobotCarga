@@ -14,6 +14,11 @@ body{
     /* border: none; */
 }
 
+.tiempos{
+    margin-left: 10px;
+    display: inline-block;
+}
+
 .fondo{
     background: linear-gradient(to left, #632675, #9bcaff);
 }
@@ -24,6 +29,16 @@ body{
     margin-left: 10px;
     height: 30px;
     background-color: rgb(221, 255, 31);
+    background-image: url('./images/elementos/objetivo.png');
+    background-size: 30px 30px;
+}
+
+.objetivodestino{
+    background-color: rgb(216, 25, 72);
+    display: inline-block;
+    width: 30px;
+    margin-left: 10px;
+    height: 30px;
     background-image: url('./images/elementos/objetivo.png');
     background-size: 30px 30px;
 }

@@ -34,29 +34,37 @@ function Opciones(props) {
   return (
     <div>
       <div className= "form-inline well">
-        <div class="fileUpload btn btn-primary">
+        {!props.playing && !props.codigoFinalizado && <div className="fileUpload btn btn-primary">
           <span>Cargar Mapa</span>
           <input type="file" class="upload" id='fileMapa' onChange={(e) => handleSubmit(e)}/>
-        </div>
-        {(props.mapa != "") &&
-          <div class="fileUpload btn btn-primary">
+        </div>}
+        {(props.mapa != "") && !props.playing && !props.codigoFinalizado &&
+          <div className="fileUpload btn btn-primary">
             <span>Cargar Codigo</span>
-            <input type="file" class="upload" id='fileCodigo' onChange={(e) => handleSubmit(e)}/>
+            <input type="file" className="upload" id='fileCodigo' onChange={(e) => handleSubmit(e)}/>
           </div>
         }
-        {(props.codigo != "") &&
-          <button type="button" class={props.iniciar ? "btn btn-danger" :"btn btn-success"} 
+        {(props.matriz.length > 0) && !props.codigoFinalizado &&
+          <button type="button" className={props.iniciar ? "btn btn-danger" :"btn btn-success"} 
           onClick={() => {props.setIniciar(!props.iniciar)}}
-          >{props.iniciar ? "Detener" : "Iniciar"}</button>
+          >{props.iniciar ? "Pausar" : "Iniciar"}</button>
         }
-        {(props.iniciar) &&
-          <select className="form-select input-sm" value={props.delay} style={{width: 'auto'}}
-           onchange={(e) => {props.setDelay(e.target.value); console.log('ww', e.target.value)}}>
+        {(props.iniciar) && !props.codigoFinalizado &&
+        <select className="form-select tiempos input-sm" value={props.delay} style={{width: 'auto'}}
+           onChange={(e) => {props.setDelay(e.target.value)}}>
+          <option value="0.2">0.2 Segundos</option>
+          <option value="0.5">0.5 Segundos</option>
           <option value="1">1 Segundo</option>
           <option value="2">2 Segundos</option>
           <option value="3">3 Segundos</option>
           <option value="5">5 Segundos</option>
         </select>
+        }
+        {
+          ((props.iniciar) || props.codigoFinalizado) &&
+          <button type="button" className="btn btn-danger" onClick={(e) => {window.location.reload()}}>
+            Reiniciar
+          </button>
         }
       </div>
     </div>
@@ -72,7 +80,6 @@ function Mapa(props) {
     for (let i = 0; i < props.y; i++) {
       arregloY[i] = i;
     }
-    //console.log(props.x, ': ' ,props.arr);
   function style(x, y) {
     let cargando = (props.objetivoMontado) ? "Con" : "";
     switch(props.arr[x].charAt(y)) {
@@ -89,20 +96,23 @@ function Mapa(props) {
           return 'robotRight' + cargando;
       case '<':
         props.setDir(180);
-        //cargando = ""
-        //if props.carga
-        //cargando = "conCarga"
         return 'robotLeft' + cargando;// + cargando;
       case 'v':
       case 'V':
           props.setDir(270);
           return 'robotDown' + cargando;
+      //AGREGAR UNO AL CONTADOR
       case 'O':
       case 'o':
         return 'objetivo';
+        //SI EL ANTERIOR ERA C | c ENTONCES DISMINUYE UNO AL OTRO CONTADOR
       case 'D':
       case 'd':
-          return 'destino';
+        return 'destino';
+        //AGREGAR UNO AL OTRO CONTADOR
+      case 'C':
+      case 'c':
+        return 'objetivodestino';
       default:
         props.setErrorMsg("El archivo contiene caracteres desconoidos, Favor revise el archivo seleccionado.");
         break;
@@ -125,7 +135,6 @@ function Mapa(props) {
 function ErrorMsgCodigo(props) {
 
   function separarLineas(errores) {
-    //console.log(errores);
     return errores.split(/\r?\n/);
   }
 
@@ -157,31 +166,79 @@ function Registros(props) {
   );
 }
 
+//comando actual, log, pila, sensor direccion 
+function Datos(props) {
+  return (
+    <table class="table table-striped">
+      <tbody >
+        <th class="table_title">Dato</th>{/* TITULO DE LA TABLA */}
+        <th class="table_title">Valor</th>
+        <tr class="table_registro">
+          <th class="table_registro">Comando Actual</th>
+          <td class="table_registro">{props.comandoAct}</td> {/* EL VALOR DEL TITULO */}
+        </tr>
+        <tr class="table_registro">
+          <th class="table_registro">Log</th>
+          <td class="table_registro">{props.log}</td> {/* EL VALOR DEL TITULO */}
+        </tr>
+        {props.pila.length != 0 && 
+          <tr class="table_registro">
+          <th class="table_registro">Pila</th>
+          <td class="table_registro">{props.pila[props.pila.length - 1]}</td>
+        </tr>}
+        <tr>
+          <th class="table_registro">Sensor Direccion</th>
+          <td class="table_registro">{props.dir}</td>
+        </tr>
+        <tr>
+          <th class="table_registro">Sensor Posicion X</th>
+          <td class="table_registro">{props.posX}</td>
+        </tr>
+        <tr>
+          <th class="table_registro">Sensor Posicion Y</th>
+          <td class="table_registro">{props.posY}</td>
+        </tr>
+      </tbody>
+    </table>
+  );
+}
+
+
 function App() {
-  //var stack = [];
   var error = "";
   let matrizTeemporal = [];
-  const [matriz, setMatriz] = useState([]);
-  const [stack, setStack] = useState([]);
-  const matrizRe = useRef([]);
-  const [matrizRegistros, setMatrizRegistros] = useState([]);
   let matrizRegistro = [];
-  const fil = useRef(0);
-  const col = useRef(0);
-  const moves = useRef(0);
+  //Mapa y Codigo
   const [errorCodigo, setErrorCodigo] = useState("");
   const [mapa, setMapa] = useState("");
-  const [delay, setDelay] = useState(1);
   const [arregloMapa, setArregloMapa] = useState("");
   const [codigo, setCodigo] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
+  const [sizeX, setSizeX]  = useState(0);
+  const [sizeY, setSizeY]  = useState(0);
+  const fil = useRef(0);
+  const col = useRef(0);
+  const [matriz, setMatriz] = useState([]);
+
+  //Robot
   const [posX, setPosX] = useState(0);
   const [posY, setPosY] = useState(0);
   const [dir, setDir] = useState(0);
+  const moves = useRef(0);
   const [objetivoMontado, setObjetivoMontado] = useState(false);
-  const [sizeX, setSizeX]  = useState(0);
-  const [sizeY, setSizeY]  = useState(0);
+
+  //Simulacion
+  const [errorMsg, setErrorMsg] = useState("");
+  const [delay, setDelay] = useState(1);
   const [iniciar, setIniciar] = useState(false);
+  const boxes = useRef(0);
+  const delivered = useRef(0);
+  const [codigoFinalizado, setCodigoFinalizado] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [matrizRegistros, setMatrizRegistros] = useState([]);
+  const [comandoAct, setComandoAct] = useState("");
+  const [stack, setStack] = useState([]);
+  const matrizRe = useRef([]);
+  const [logTxt, setLog] = useState("");
 
   useEffect(() => {//codigo
     codigoMatriz(codigo);
@@ -193,14 +250,20 @@ function App() {
       arregloTemp.push(0);
       matriztmp.push(arregloTemp);
     }
-    matrizRe.current = matriztmp
+    matrizRe.current = matriztmp;
     setMatrizRegistros(matriztmp);
-    console.log(matrizRe.current);
+    setLog("");
   }, [codigo]);
 
-  function updateMatriz(arr) {
-    setMatriz(matrizTemp => [...matrizTemp, arr]);
-  }
+  useEffect(() => {
+    setIniciar(false);
+  }, [codigoFinalizado])
+
+  useEffect(() => {
+    if (iniciar) {
+      setPlaying(true);
+    }
+  }, [iniciar])
 
   function stackPop() {
     const tempStack = [...stack];
@@ -231,12 +294,9 @@ function App() {
     }
   }, [arregloMapa]);
 
-  useEffect(() => {
-    console.log('matriz:', matriz);
-  }, [matriz]);
-
   useEffect(() => {//mapa
     setArregloMapa([]);
+    boxes.current = 0;
     let arr = mapa.split(/\r?\n/);
     let dimensions = arr[0].split(',');
     if (dimensions.length != 2 && mapa) {
@@ -248,10 +308,20 @@ function App() {
       const y = dimensions[1];
       setSizeX(x);
       setSizeY(y);
+      const boxtmp = [];
       setArregloMapa(arr.slice(1, arr.length));
+      for (let i = 0; i < x; i++) {
+        for (let j = 0; j < y; j++) {
+          if (arr[i].charAt(j) == 'o' || arr[i].charAt(j) == 'O') {
+            boxtmp.push("");
+          }
+        }
+      }
+      boxes.current = boxtmp.length;
     } catch (error) {
       setErrorMsg("Ocurrio un error leyendo el archivo");
     }
+    
   }, [mapa]);
 
   useInterval(() => {
@@ -259,7 +329,6 @@ function App() {
       if(enfrente("rgb(84, 94, 105)")){
         let pos = 0;
         moves.current = moves.current - 1;
-        console.log(moves.current);
         if (dir == 0) {
           handleArregloMapaUpdate(posX, posY, '-', posX, posY + 1, '>', moves.current);
         } else if (dir == 90) {
@@ -271,6 +340,8 @@ function App() {
         }
       } else {
         moves.current = 0;
+        setErrorMsg('EL ROBOT QUISO SALIRSE DE LOS LIMITES FISICOS');
+        setCodigoFinalizado(true);
       }
     } else {
       var comandoActual = "";
@@ -278,7 +349,7 @@ function App() {
       let z = 0;
       try {
         comandoActual = matriz[fil.current][col.current];
-        console.log(comandoActual, 'fil: ', fil.current, 'col: ', col.current);
+        setComandoAct(comandoActual);
         ejecutarComando(comandoActual);
         Registros = "";
         for (var i = 0; i < 16; i++) {
@@ -287,8 +358,6 @@ function App() {
         if (fil.current == matriz.length - 1 && col.current == matriz[fila].length)
           return;
       } catch (error) {
-        let errores = "";
-        setErrorMsg(errores);
       }
       function ejecutarComando(comando) {
         var terminoJump = false;
@@ -297,29 +366,47 @@ function App() {
           case "avz":
             if(enfrente("rgb(84, 94, 105)")){
               let pos = 0;
-              const numero = convertirNumero(palabras[1]);
-              console.log('dir: ', dir);
-              //const robotAntes = document.getElementById(posX * sizeY + posY);
-              //Cambiar el estilo
-              if (dir == 0) {
-                handleArregloMapaUpdate(posX, posY, '-', posX, posY + 1, '>', numero);
-              } else if (dir == 90) {
-                handleArregloMapaUpdate(posX, posY, '-', posX - 1, posY, '^', numero);
-              } else if (dir == 180) {
-                handleArregloMapaUpdate(posX, posY, '-', posX, posY - 1, '<', numero);
-              } else if (dir == 270 /*&& enfrente("rgb(84, 94, 105))*/) {
-                handleArregloMapaUpdate(posX, posY, '-', posX + 1, posY, 'v', numero);
+              let numero = convertirNumero(palabras[1]);
+              let dirtmp = dir;
+              if (numero < 0) {
+                dirtmp += 180;
+                if (dirtmp > 270) {
+                  dirtmp -= 360;
+                }
+                if (dirtmp == 0) {
+                  handleArregloMapaUpdate(posX, posY, '-', posX, posY + 1, '>', numero);
+                } else if (dirtmp == 90) {
+                  handleArregloMapaUpdate(posX, posY, '-', posX - 1, posY, '^', numero);
+                } else if (dirtmp == 180) {
+                  handleArregloMapaUpdate(posX, posY, '-', posX, posY - 1, '<', numero);
+                } else if (dirtmp == 270 /*&& enfrente("rgb(84, 94, 105))*/) {
+                  handleArregloMapaUpdate(posX, posY, '-', posX + 1, posY, 'v', numero);
+                }
+                setDir(dirtmp);
+                numero *= -1;
               }
-              //const robotDespues = document.getElementById(posX * sizeY + posY);
-              //Cambiamos el estilo
-              // sleep(500);
-              if (numero > 1) {
-                moves.current = numero - 1;
-              } else {
-                moves.current = 0;
+              if(numero != 0 ){
+                if (dirtmp == 0) {
+                  handleArregloMapaUpdate(posX, posY, '-', posX, posY + 1, '>', numero);
+                } else if (dirtmp == 90) {
+                  handleArregloMapaUpdate(posX, posY, '-', posX - 1, posY, '^', numero);
+                } else if (dirtmp == 180) {
+                  handleArregloMapaUpdate(posX, posY, '-', posX, posY - 1, '<', numero);
+                } else if (dirtmp == 270 /*&& enfrente("rgb(84, 94, 105))*/) {
+                  handleArregloMapaUpdate(posX, posY, '-', posX + 1, posY, 'v', numero);
+                }
+                if (numero > 1) {
+                  moves.current = numero - 1;
+                } else {
+                  moves.current = 0;
+                }
               }
             }  else {
               moves.current = 0;
+              //BUG
+              setErrorMsg('EL ROBOT QUISO SALIRSE DE LOS LIMITES FISICOS');
+              setCodigoFinalizado(true);
+              // EL ROBOT QUISO SALIRSE DE LOS LIMITES FISICOS
             }
             break;
 
@@ -336,7 +423,6 @@ function App() {
               setDir(0);
             } else {
               direccion = dir + parseInt(palabras[1]);
-              console.log(direccion);
               setDir(direccion);
             }
             let chr = '';
@@ -355,83 +441,81 @@ function App() {
                 break;
             }
             handleArregloMapaUpdate(posX,posY,chr);
-            // let path = "./images/robot/";
-            // if(objetivoMontado == 1)
-            //   path += "conCarga/";
-            // else
-            //   path += "sinCarga/";
-            // if(dir == 0)
-            //   path += "derecha.png";
-            // else if(dir == 90)
-            //   path += "arriba.png";
-            // else if(dir == 180)
-            //   path += "izquierda.png";
-            // else if(dir == 270)
-            //   path += "abajo.png";
-            // robot.style.backgroundImage = path;
             break;
 
           case "crg":
+            let char = '';
+            const obj = objetivoMontado;
             if (palabras[1] == 0) {
-              if (objetivoMontado == 1) {
-                setObjetivoMontado(0);
-
-                //enfrente("rgb(84, 94, 105)")
-                /* const idActual = posX * sizeY + posY;
-                 let frente;
-                 let path = "./images/robot/sinCarga/";
-                 if(dir == 0){
-                   frente = document.getElementById(idActual + 1);
-                   path += "derecha.png";
-                 }else if(dir == 90){
-                   frente  = document.getElementById(idActual + sizeY);
-                   path += "arriba.png";
-                 }else if(dir == 180){
-                   frente  = document.getElementById(idActual - 1);
-                   path += "izquierda.png";
-                 }else if(dir == 270){
-                   frente  = document.getElementById(idActual - sizeY);
-                   path += "abajo.png";
-                 }
-                 //Cambiar imagen del robot con el path
-                 frente.style.backgroundImage = "url('./images/elementos/objetivo.png');";
-                 frente.style.backgroundColor = "rgb(221, 255, 31);";*/
-                //CAMBIAR IMAGEN
-                //Poner la caja en el lugar indicado
+              if (obj == 1) {
+                if(enfrente("rgb(84, 94, 105)") || enfrente("rgb(83, 255, 49)")) {
+                  setObjetivoMontado(0);
+                  if (enfrente("rgb(84, 94, 105)")) {
+                    char = 'o';
+                  } else if (enfrente("rgb(83, 255, 49)")) {
+                    char = 'c';
+                    delivered.current = delivered.current + 1;
+                  } else {
+                    //EL ROBOT QUISO DESCARGAR LA CAJA EN UNA ZONA NO PERMISIBLE
+                    setErrorMsg('EL ROBOT QUISO DESCARGAR LA CAJA EN UNA ZONA NO PERMISIBLE');
+                    setCodigoFinalizado(true);
+                  }
+                  if (dir == 0) {
+                    handleArregloMapaUpdate(posX, posY + 1, char);
+                  } else if (dir == 90) {
+                    handleArregloMapaUpdate(posX - 1, posY, char);
+                  } else if (dir == 180) {
+                    handleArregloMapaUpdate(posX , posY - 1, char);
+                  } else if (dir == 270) {
+                    handleArregloMapaUpdate(posX + 1, posY, char);
+                  }
+                }
+              } else {
+                setErrorMsg('EL ROBOT QUISO DESCARGAR SIN TENER UNA CAJA');
+                setCodigoFinalizado(true);
               }
             } else {
-              if (objetivoMontado == 0 && enfrente("rgb(221, 255, 31)")) {
+              if (obj == 0 && (enfrente("rgb(221, 255, 31)") || enfrente("rgb(216, 25, 72)"))) {
+                if(enfrente("rgb(216, 25, 72)")){
+                  char = 'd';
+                  delivered.current = delivered.current - 1;
+                } else {
+                  char = '-'; 
+                }  //DISMINUYE
                 if (dir == 0) {
-                  //handleArregloMapaUpdate(posX, posY, '-', posX, posY + 1, '>', numero);
+                  handleArregloMapaUpdate(posX, posY + 1, char);
                 } else if (dir == 90) {
-                  //handleArregloMapaUpdate(posX, posY, '-', posX - 1, posY, '^', numero);
+                  handleArregloMapaUpdate(posX - 1, posY, char);
                 } else if (dir == 180) {
-                  //handleArregloMapaUpdate(posX, posY, '-', posX, posY - 1, '<', numero);
+                  handleArregloMapaUpdate(posX , posY - 1, char);
                 } else if (dir == 270 /*&& enfrente("rgb(84, 94, 105))*/) {
-                  //handleArregloMapaUpdate(posX, posY, '-', posX + 1, posY, 'v', numero);
+                  handleArregloMapaUpdate(posX + 1, posY, char);
                 }
                 setObjetivoMontado(1);
-                //CAMBIAR IMAGEN
-                //Quitar la caja  del frente/
+              } else if (obj == 1) {
+                setErrorMsg('EL ROBOT QUISO CARGAR MAS DE UNA CAJA');
+                setCodigoFinalizado(true);
               }
             }
             break;
 
           case "push":
             if (esNumero(palabras[1]))
-              //stack.push(palabras[1]);
               stackPush(palabras[1]);
             else {
               let idRegistro = palabras[1].split("R")[0];
-              //stack.push(matrizRegistro[idRegistro][1]);
               stackPush(matrizRe.current[idRegistro][1]);
             }
             break;
 
           case "pop":
-            let idRPop = palabras[1].split("R")[0];
-            //matrizRegistro[idRPop][1] = stack.pop();
-            matrizRe.current[idRPop][1] = stackPop();
+            if(stack.length > 0 ){
+              let idRPop = palabras[1].split("R")[0];
+              matrizRe.current[idRPop][1] = stackPop();
+            }else{
+              setErrorMsg('NO SE PUEDE HACER POP EN UNA PILA VACÍA');
+              setCodigoFinalizado(true);
+            }
             break;
 
           case "snsd": //Direccion
@@ -482,9 +566,9 @@ function App() {
 
           case "not":
             if (convertirNumero(palabras[1]) != 0)
-              matrizRe.current[14][1] = 0;
+              matrizRe.current[8][1] = 0;
             else
-              matrizRe.current[14][1] = 1;
+              matrizRe.current[8][1] = 1;
             break;
 
           case "mov":
@@ -518,16 +602,21 @@ function App() {
             matrizRe.current[idRMul][1] = (parseInt(num1) * parseInt(num2));
             break;
 
-          case "div": //R13
+          case "div": //15R
             var num1, num2;
             num1 = convertirNumero(palabras[1]);
             num2 = convertirNumero(palabras[2]);
             const idRDiv = palabras[3].split("R")[0];
-            matrizRe.current[idRDiv][1] = parseInt(parseInt(num1) / parseInt(num2));
-            matrizRe.current[13][1] = (parseInt(num1) % parseInt(num2));
+            if(num2 == 0 ){
+              setErrorMsg('LA DIVISIÓN DE UN NÚMERO ENTRE CERO ES INDEFINIDO');
+              setCodigoFinalizado(true);
+            }else{
+              matrizRe.current[idRDiv][1] = parseInt(parseInt(num1) / parseInt(num2));
+              matrizRe.current[15][1] = (parseInt(num1) % parseInt(num2));
+            }
             break;
 
-          case "cmp": //Registro R12
+          case "cmp": //Registro 12R
             var num1, num2;
             num1 = convertirNumero(palabras[1]);
             num2 = convertirNumero(palabras[2]);
@@ -535,76 +624,79 @@ function App() {
               matrizRe.current[12][1] = 0;
             else if (num1 > num2)
               matrizRe.current[12][1] = 1;
-            else if (num1 >= num2)
-              matrizRe.current[12][1] = 2;
             else if (num1 < num2)
               matrizRe.current[12][1] = -1;
-            else if (num1 <= num2)
-              matrizRe.current[12][1] = -2;
+            if (num1 >= num2)
+              matrizRe.current[13][1] = 2;
+            if (num1 <= num2)
+              matrizRe.current[11][1] = -2;
             break;
 
-          case "and": //Registro R11
+          case "and": //Registro 10R
             var num1, num2;
             num1 = convertirNumero(palabras[1]);
             num2 = convertirNumero(palabras[2]);
             if (num1 != 0 && num2 != 0)
-              matrizRe.current[11][1] = 1;
+              matrizRe.current[10][1] = 1;
             else
-              matrizRe.current[11][1] = 0;
+              matrizRe.current[10][1] = 0;
             break;
 
-          case "or": //Registro R10
+          case "or": //Registro 9R
             var num1, num2;
             num1 = convertirNumero(palabras[1]);
             num2 = convertirNumero(palabras[2]);
             if (num1 != 0 || num2 != 0)
-              matrizRe.current[10][1] = 1;
+              matrizRe.current[9][1] = 1;
             else
-              matrizRe.current[10][1] = 0;
+              matrizRe.current[9][1] = 0;
             break;
 
           case "jmp":
             jumpEtiqueta(palabras[1]);
             break;
 
-          case "jmle": //Registro R12
-            if (matrizRe.current[12][1] == -2)
+          case "jmle": //Registro 11R
+            if (matrizRe.current[11][1] == -2)
               jumpEtiqueta(palabras[1]);
             else
               terminoJump = true;
             break;
 
-          case "jml": //Registro R12
+          case "jml": //Registro 12R
             if (matrizRe.current[12][1] == -1)
               jumpEtiqueta(palabras[1]);
             else
               terminoJump = true;
             break;
 
-          case "jme": //Registro R12
+          case "jme": //Registro 12R
             if (matrizRe.current[12][1] == 0)
               jumpEtiqueta(palabras[1]);
             else
               terminoJump = true;
             break;
 
-          case "jmh": //Registro R12
+          case "jmh": //Registro 12R
             if (matrizRe.current[12][1] == 1)
               jumpEtiqueta(palabras[1]);
             else
               terminoJump = true;
             break;
 
-          case "jmhe": //Registro R12
-            if (matrizRe.current[12][1] == 2)
+          case "jmhe": //Registro 13R
+            if (matrizRe.current[13][1] == 2)
               jumpEtiqueta(palabras[1]);
             else
               terminoJump = true;
             break;
 
           case "log":
+            let mensajeLog = palabras[1] + " " +convertirNumero(palabras[2]);
+            setLog(mensajeLog);
             break;
         }
+        
         if (!esJump(comando) || terminoJump) {
           if (col.current == matriz[fil.current].length - 1) {
             fila++;
@@ -616,6 +708,19 @@ function App() {
             col.current = col.current + 1;
           }
         }
+        if( fil.current == matriz.length ){
+          if(delivered.current != boxes.current){
+            setErrorMsg('El Programa Ha Sido Un Fallo');
+            setCodigoFinalizado(true);
+            setPlaying(false);
+          }else{
+            setErrorMsg(' El Programa Ha Sido Un Exito');
+            setIniciar(false);
+            setCodigoFinalizado(true);
+            setPlaying(false);
+          }
+        }
+
       }
 
       function jumpEtiqueta(etiqueta) {
@@ -632,7 +737,6 @@ function App() {
     }
     const currTmp = [...matrizRe.current]
     setMatrizRegistros(currTmp);
-    //console.log(matriz);
   }, iniciar ? delay * 1000 : null);
   
 
@@ -652,7 +756,9 @@ function App() {
     const arr = [...arregloMapa];
     arr[lineaOld] = setCharAt(arr[lineaOld], indexOld,charReplace);
     arr[lineaNew] = setCharAt(arr[lineaNew], indexNew,charNew);
-    moves.current = rmoves;
+    if (moves.current != 0) {
+      moves.current = rmoves;
+    }
     setArregloMapa(arr);
   }
 
@@ -737,7 +843,7 @@ function App() {
           if(palabras[1] == 'x' || palabras[1] == 'y')
               return true;
             error = "El parametro del comando 'snsp' debe ser uno de los ejes x/y";
-        }else if( palabras[0] == "snsd" || palabras[0] == "snsm" || palabras[0] == "snso" || palabras[0] == "snsd" || palabras[0] == "snsom" ){
+        }else if( palabras[0] == "snsdf" || palabras[0] == "snsm" || palabras[0] == "snso" || palabras[0] == "snsd" || palabras[0] == "snsom" ){
           if(esRegistro(palabras[1]))
               return true;
             error = "El parametro del comando 'snsd/snse' debe ser un registro";
@@ -755,12 +861,16 @@ function App() {
           if(esNumeroRegistro(palabras[1]) && esNumeroRegistro(palabras[2]))
               return true;
           error = "Los parametros deben ser REGISTRO/NUMERO  REGISTRO/NUMERO";
+        }else if(palabras[0] == "log"){
+          if(esNumeroRegistro(palabras[2]))
+            return true;
+            error = "Los parametros deben ser PALABRA  REGISTRO/NUMERO";
         }
       }else if(palabras.length == 4){
         if( palabras[0] == "sum" || palabras[0] == "rst" || palabras[0] == "mul" || palabras[0] == "div"){
           if(esNumeroRegistro(palabras[1]) && esNumeroRegistro(palabras[2]) && esRegistro(palabras[3]))
             return true;
-          error = "Los parametros deben ser REGISTRO/NUMERO   REGISTRO/NUMERO";
+          error = "Los parametros deben ser REGISTRO/NUMERO   REGISTRO/NUMERO REGISTRO";
         }
       }else{
         error = "Cantidad invalida de parametros";
@@ -771,8 +881,6 @@ function App() {
   }
 
   function codigoMatriz(codigoTxt) {
-    //const erroresFrame = document.getElementById("errores");
-    //erroresFrame.innerText = "";
     let errores = "";
     var jumps = [];
     for( var i = 0; i < 16; i++ ) {
@@ -812,46 +920,41 @@ function App() {
           lineas[i] += " ";
       }
       if( lineas[i].split(" ").length == 1 && lineas[i].charAt(lineas[i].length-1) == ':' ){
-        //matriz.push(arreglo);
-        matrizTeemporal.push(arreglo);
-        //updateMatriz(arreglo);
+        if(arreglo.length > 0)
+          matrizTeemporal.push(arreglo);
         arreglo = [];
-        lineas[i] = lineas[i].substring(0, lineas[i].length - 1);
-        if(existeEtiqueta(lineas[i])){
-          //erroresFrame.innerText += "Error en la linea: " + (i+1) + "\n" +lineas[i] + "\nEtiqueta repetida\n\n";
-          // console.log("Error en la linea: " + i + "\n" +lineas[i] + "\nEtiqueta repetida\n");
+        let et = lineas[i].substring(0, lineas[i].length - 1);
+        if(existeEtiqueta(et)){
           errores += "Error en la linea: " + (i+1) + "\n" +lineas[i] + "\nEtiqueta repetida\n\n";
         }else 
-          arreglo.push(lineas[i]);
+          arreglo.push(et);
         
       }
       if(lineas[i][0] != '#' && lineas[i].split(" ").length > 1 ){
         arreglo.push(lineas[i]);
         if( !comandoValido(lineas[i]) )
-          //erroresFrame.innerText += "Error en la linea: " + (i+1) + "\n" +lineas[i] + "\n" + error + "\n\n";
-          // console.log("Error en la linea: " + i + "\n" +lineas[i] + "\n" + error + "\n");
           errores += "Error en la linea: " + (i+1) + "\n" +lineas[i] + "\n" + error + "\n\n";
         if(esJump(lineas[i]))
           jumps.push(lineas[i] + "%" + (i+1));
       }
+      if(lineas[i].split(" ").length == 1 && lineas[i].charAt(lineas[i].length-1) != ':' && codigoTxt.length > 1 && lineas[i].split(" ")[0].length > 0){
+        errores += "Error en la linea: " + (i+1) + "\n" +lineas[i] + "\n Porción de código invalido \n\n";
+      }
     }
-    //matriz.push(arreglo);
-    matrizTeemporal.push(arreglo);
-    //updateMatriz(arreglo);
-    for(var i = 0; i < jumps.length; i++ ){
+    if(arreglo.length > 0)
+      matrizTeemporal.push(arreglo);
+    for(var i = 0; i < jumps.length; i++ ) {
       if(!jumpValido(jumps[i])){
         const jmp = jumps[i].split(" ")[0] + " " + jumps[i].split(" ")[1].split("%")[0];
-        //erroresFrame.innerText += "Error en la linea: " + jumps[i].split(" ")[1].split("%")[1] + "\n" + jmp + "\n" + error + "\n\n";
         errores += "Error en la linea: " + jumps[i].split(" ")[1].split("%")[1] + "\n" + jmp + "\n" + error + "\n\n";
       }
-        if (errores != "") {
-          setErrorMsg("Error en su archivo de codigo, revisé abajo para más información.")
-          setErrorCodigo(errores); 
-        } else {
-          setMatriz(matrizTeemporal);
-        }
     }
-    //console.log('mat: ', matriz);
+    if (errores != "") {
+      setErrorMsg("Error en su archivo de codigo, revise abajo para más información.")
+      setErrorCodigo(errores); 
+    } else {
+      setMatriz(matrizTeemporal);
+    }
   }
   
   function convertirNumero(parametro) {
@@ -860,79 +963,42 @@ function App() {
       return matrizRe.current[idR1][1];
     }else
       return parametro;
+      
   }
 
   var fila = 0, columna = 0, comandoActual = "";
-  /*function ejecutarPrograma() {
-    var Registros = "";
-    try{
-      while(true){
-        comandoActual = matriz[fila][columna];
-        console.log(comandoActual);
-        sleep(500);
-        ejecutarComando(comandoActual);
-        Registros = "";
-        for(var i = 0; i < 16; i++){
-          Registros += "["+matrizRegistro[i][1]+"]";
-        }
-        console.log(Registros);
-        if( fila == matriz.length - 1 && columna == matriz[fila].length)
-          break;
-      }
-    }catch(error){
-      let errores = "";
-      setErrorCodigo(errores);
-    }
-  }
-
-  function sleep(milliseconds) {
-    var start = new Date().getTime();
-    for (var i = 0; i < 1e7; i++) {
-     if ((new Date().getTime() - start) > milliseconds) {
-      break;
-     }
-    }
-   }*/
 
   function enfrente(parametro) {
     let siguienteCasilla = -1;
     let idActual = posX * sizeY + posY;
     if(dir == 0){
       if( (idActual % sizeY ) != (sizeY - 1) )
-        siguienteCasilla = document.getElementById(idActual + 1);
+        siguienteCasilla = document.getElementById(parseInt(idActual) + 1);
     }else if(dir == 90){
-      if( idActual - sizeY >= 0)
-        siguienteCasilla = document.getElementById(idActual - sizeY);
+      if( (idActual - sizeY) >= 0)
+        siguienteCasilla = document.getElementById(parseInt(idActual) - parseInt(sizeY));
     }else if(dir == 180){
       if( idActual % sizeY != 0 )
-        siguienteCasilla = document.getElementById(idActual - 1);
+        siguienteCasilla = document.getElementById(parseInt(idActual) - 1);
     }else if(dir == 270){
-      if(idActual + sizeY <= sizeY * sizeX)
-        siguienteCasilla = document.getElementById(idActual + sizeY);
+      if( (parseInt(idActual, 10) + parseInt(sizeY, 10)) <= sizeY * sizeX) {
+        siguienteCasilla = document.getElementById(parseInt(idActual) + parseInt(sizeY));
+      }
     }
     if( siguienteCasilla == -1){
       return false;
     }else
-      if(window.getComputedStyle(siguienteCasilla).backgroundColor  == parametro)
+      if(window.getComputedStyle(siguienteCasilla).backgroundColor  == parametro) {
         return true;
-    //Si hay obstaculo
-    //Si esta en el borde
-    //Si hay una caja enfrente
-    /* 
-          x * sizeY + y <- idActual
-          idActual % (size(y)) == (size(y) - 1) <- Valida si estoy en el borde derecho
-          idActual % size(y) == 0 <- Valida si estoy en el borde izquierdo
-          idActual + size(y) > size(y)*size(x) <- Valida si estoy pasandome del borde inferior
-          idActual - size(y) < 0 <- Valida si estoy pasandome del borde superior
-          */ 
+      } else {
+        return false;
+      }
   }
-
-  //Asignar que registro guarda que cosa
   
   return (
     <div>
       {errorMsg &&
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div className={((errorMsg.charAt(0) == ' ') ? "alert alert-success" : "alert alert-danger") + " alert-dismissible fade show"} role="alert">
           <strong>{errorMsg}</strong>
           <button type="button" class="btn-close" data-dismiss="alert" onClick={(e) => (setErrorMsg(""))}>
             <span aria-hidden="true">&times;</span>
@@ -940,23 +1006,32 @@ function App() {
         </div>
       }
       <nav className="navbar-light bg-light">
-        <Opciones mapa={mapa} codigo={codigo} handleMapa={setMapa} setArregloMapa={setArregloMapa}
-        setErrorMsg={setErrorMsg} handleCodigo={setCodigo} setIniciar={setIniciar} iniciar={iniciar}
-        setErroresCodigo={setErrorCodigo} setDelay={setDelay} delay={delay}/>
+        <Opciones mapa={mapa} codigo={codigo} handleMapa={setMapa} setArregloMapa={setArregloMapa} 
+        codigoFinalizado={codigoFinalizado} setErrorMsg={setErrorMsg} handleCodigo={setCodigo}
+        setIniciar={setIniciar} iniciar={iniciar} setErroresCodigo={setErrorCodigo}
+        setDelay={setDelay} matriz = {matriz} delay={delay} playing={playing}/>
       </nav>
       <div className="fondo p-5 text-center">
         {(arregloMapa.length != 0) &&
             <div className="row">
-              <div className="col-md-10">
-                <Mapa setErrorMsg={setErrorMsg} setDir={setDir} arr={arregloMapa}
-                  x={sizeX} y={sizeY} objetivoMontado={objetivoMontado} />
+              <div className ="col-md-10">
+                {/* ROW */}
+                <div className="row">
+                  <Mapa setErrorMsg={setErrorMsg} setDir={setDir} arr={arregloMapa}
+                    x={sizeX} y={sizeY} objetivoMontado={objetivoMontado} boxes ={boxes} />
+                </div>
+                {/* ROW */}
+                <div className = "row">
+                  <Datos pila={stack} log={logTxt} comandoAct={comandoAct}
+                  dir={dir} posX={posX} posY={posY}/>
+                </div>
               </div>
-              
-              {<div className="col-md-2">
+              <div className="col-md-2">
                 <Registros registros={matrizRegistros}/>
-        </div>}
+              </div>
             </div>
           }
+
       </div>
       <ErrorMsgCodigo errores={errorCodigo} />
     </div>
