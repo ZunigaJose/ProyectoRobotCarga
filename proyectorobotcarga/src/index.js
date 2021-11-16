@@ -364,27 +364,27 @@ function App() {
         const palabras = comando.split(" ");
         switch (palabras[0]) {
           case "avz":
+            if (numero < 0) {
+              dirtmp += 180;
+              if (dirtmp > 270) {
+                dirtmp -= 360;
+              }
+              if (dirtmp == 0) {
+                handleArregloMapaUpdate(posX, posY, '-', posX, posY + 1, '>', numero);
+              } else if (dirtmp == 90) {
+                handleArregloMapaUpdate(posX, posY, '-', posX - 1, posY, '^', numero);
+              } else if (dirtmp == 180) {
+                handleArregloMapaUpdate(posX, posY, '-', posX, posY - 1, '<', numero);
+              } else if (dirtmp == 270 /*&& enfrente("rgb(84, 94, 105))*/) {
+                handleArregloMapaUpdate(posX, posY, '-', posX + 1, posY, 'v', numero);
+              }
+              setDir(dirtmp);
+              numero *= -1;
+            }
             if(enfrente("rgb(84, 94, 105)")){
               let pos = 0;
               let numero = convertirNumero(palabras[1]);
               let dirtmp = dir;
-              if (numero < 0) {
-                dirtmp += 180;
-                if (dirtmp > 270) {
-                  dirtmp -= 360;
-                }
-                if (dirtmp == 0) {
-                  handleArregloMapaUpdate(posX, posY, '-', posX, posY + 1, '>', numero);
-                } else if (dirtmp == 90) {
-                  handleArregloMapaUpdate(posX, posY, '-', posX - 1, posY, '^', numero);
-                } else if (dirtmp == 180) {
-                  handleArregloMapaUpdate(posX, posY, '-', posX, posY - 1, '<', numero);
-                } else if (dirtmp == 270 /*&& enfrente("rgb(84, 94, 105))*/) {
-                  handleArregloMapaUpdate(posX, posY, '-', posX + 1, posY, 'v', numero);
-                }
-                setDir(dirtmp);
-                numero *= -1;
-              }
               if(numero != 0 ){
                 if (dirtmp == 0) {
                   handleArregloMapaUpdate(posX, posY, '-', posX, posY + 1, '>', numero);
