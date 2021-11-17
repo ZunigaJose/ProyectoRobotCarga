@@ -997,16 +997,16 @@ function App() {
     let siguienteCasilla = -1;
     let idActual = posX * sizeY + posY;
     if(dir == 0){
-      if( (parseInt(idActual, 10) + parseInt(sizeY, 10)) <= sizeY * sizeX)
+      if( idActual % sizeY != 0 )
         siguienteCasilla = document.getElementById(parseInt(idActual) - 1);
     }else if(dir == 90){
-      if( idActual % sizeY != 0 )
+      if( (parseInt(idActual, 10) + parseInt(sizeY, 10)) <= sizeY * sizeX)
         siguienteCasilla = document.getElementById(parseInt(idActual) + parseInt(sizeY));
     }else if(dir == 180){
-      if( (idActual - sizeY) >= 0)
+      if( (idActual % sizeY ) != (sizeY - 1) )
         siguienteCasilla = document.getElementById(parseInt(idActual) + 1);
     }else if(dir == 270){
-      if( (idActual % sizeY ) != (sizeY - 1) ) {
+      if( (idActual - sizeY) >= 0){
         siguienteCasilla = document.getElementById(parseInt(idActual) - parseInt(sizeY));
       }
     }
